@@ -1,11 +1,47 @@
-<div align="center">
+# CCNA Mastery Pro
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Comprehensive Cisco Certified Network Associate (CCNA) exam preparation platform.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **AI Mentor**: Chat with an AI-powered CCNP instructor for clarifications on any CCNA topic.
+- **Topology Builder**: Design your network diagrams with a lightweight, Packet Tracer-like interactive canvas.
+- **IOS Config Lab**: Practice Cisco CLI commands in a simulated environment.
+- **Practice Quiz**: Test your knowledge with an expansive question bank, customizable by difficulty and length.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Technology Stack
 
-</div>
+- **Frontend**: React 19 + TypeScript
+- **Bundler**: Vite
+- **Styling**: Tailwind CSS 4
+- **Animations**: Motion (Framer Motion)
+- **Canvas**: Konva + React-Konva
+- **AI**: Google Gemini API (@google/genai)
+
+## Hosting on GitHub
+
+To host this project on GitHub:
+
+1. Create a new repository on GitHub.
+2. Export the project from Google AI Studio Build.
+3. Push the code to your repository:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-repo-url>
+   git push -u origin main
+   ```
+4. **Environment Variables**: For the AI Mentor to work, you'll need to set up a `GEMINI_API_KEY` in your hosting provider's environment variables.
+
+## Development
+
+Install dependencies:
+```bash
+npm install
+```
+
+Start the development server:
+```bash
+npm run dev
+```
