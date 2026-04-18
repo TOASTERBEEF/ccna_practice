@@ -31,7 +31,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
   return <Target size={16} className="text-indigo-600" />;
 };
 
-export default function LabChallenges() {
+export default function LabChallenges({ onChallengeStarted }: { onChallengeStarted?: (id: string) => void }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
@@ -90,6 +90,7 @@ export default function LabChallenges() {
             <button 
               className="mt-6 w-full py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-cisco-blue transition-colors flex items-center justify-center gap-2 group-hover:bg-cisco-blue"
               onClick={() => {
+                if (onChallengeStarted) onChallengeStarted(challenge.id);
                 window.alert(`Started Challenge: ${challenge.title}. Head over to the ${challenge.category === 'cli' ? 'Lab Simulation' : 'Topology Builder'} to complete it!`);
               }}
             >

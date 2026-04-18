@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { PRACTICE_QUESTIONS, Question, Difficulty } from '../types';
+import { useState, useMemo, useEffect } from 'react';
+import { PRACTICE_QUESTIONS, Question, Difficulty, CCNA_DOMAINS } from '../types';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -8,7 +8,8 @@ import {
   HelpCircle, 
   Settings2, 
   Trophy,
-  BarChart3
+  BarChart3,
+  BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
@@ -18,9 +19,15 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export default function PracticeQuiz() {
+interface PracticeQuizProps {
+  onComplete?: () => void;
+  initialDomainId?: string | null;
+}
+
+export default function PracticeQuiz({ onComplete, initialDomainId }: PracticeQuizProps) {
   const [isStarted, setIsStarted] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
+  const [selectedDomain, setSelectedDomain] = useState<string | 'all'>('all');
   const [questionLimit, setQuestionLimit] = useState(5);
   
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,15 +37,38 @@ export default function PracticeQuiz() {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  const startQuiz = () => {
+  // Auto-start if initialDomainId is provided and hasn't started yet
+  useEffect(() => {
+    if (initialDomainId) {
+      setSelectedDomain(initialDomainId);
+      // Auto-start the quiz if we just came from a domain click
+      if (!isStarted && !isFinished) {
+          // We wait a tiny bit for the state to settle
+          const timer = setTimeout(() => {
+            startQuizWithParams(initialDomainId, difficulty, questionLimit);
+          }, 100);
+          return () => clearTimeout(timer);
+      }
+    }
+  }, [initialDomainId]);
+
+  const startQuizWithParams = (domain: string, diff: string, limit: number) => {
     let filtered = [...PRACTICE_QUESTIONS];
-    if (difficulty !== 'all') {
-      filtered = filtered.filter(q => q.difficulty === difficulty);
+    if (diff !== 'all') {
+      filtered = filtered.filter(q => q.difficulty === diff);
+    }
+    if (domain !== 'all') {
+      filtered = filtered.filter(q => q.domainId === domain);
     }
     
+    if (filtered.length === 0) {
+        window.alert("No questions found for this specific combination. Resetting filters.");
+        return;
+    }
+
     // Shuffle and limit
     const shuffled = filtered.sort(() => Math.random() - 0.5);
-    const limited = shuffled.slice(0, Math.min(questionLimit, shuffled.length));
+    const limited = shuffled.slice(0, Math.min(limit, shuffled.length));
     
     setQuizQuestions(limited);
     setIsStarted(true);
@@ -47,6 +77,10 @@ export default function PracticeQuiz() {
     setIsFinished(false);
     setShowResult(false);
     setSelectedOption(null);
+  };
+
+  const startQuiz = () => {
+    startQuizWithParams(selectedDomain, difficulty, questionLimit);
   };
 
   const currentQuestion = quizQuestions[currentIndex];
@@ -71,6 +105,7 @@ export default function PracticeQuiz() {
       setShowResult(false);
     } else {
       setIsFinished(true);
+      if (onComplete) onComplete();
     }
   };
 
@@ -94,6 +129,42 @@ export default function PracticeQuiz() {
         </div>
 
         <div className="space-y-8">
+            <div className="space-y-4">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <BookOpen size={14} />
+                    Select Domain Focus
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                        onClick={() => setSelectedDomain('all')}
+                        className={cn(
+                            "px-4 py-2.5 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between",
+                            selectedDomain === 'all' 
+                                ? "bg-cisco-blue/5 border-cisco-blue text-cisco-blue" 
+                                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                        )}
+                    >
+                        Comprehensive (All Domains)
+                        {selectedDomain === 'all' && <div className="w-2 h-2 bg-cisco-blue rounded-full" />}
+                    </button>
+                    {CCNA_DOMAINS.map(domain => (
+                        <button
+                            key={domain.id}
+                            onClick={() => setSelectedDomain(domain.id)}
+                            className={cn(
+                                "px-4 py-2.5 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between",
+                                selectedDomain === domain.id 
+                                    ? "bg-cisco-blue/5 border-cisco-blue text-cisco-blue" 
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                            )}
+                        >
+                            <span className="truncate pr-2">{domain.title}</span>
+                            {selectedDomain === domain.id && <div className="w-2 h-2 bg-cisco-blue rounded-full shrink-0" />}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="space-y-4">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <BarChart3 size={14} />

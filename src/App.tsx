@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CCNA_DOMAINS } from './types';
 import AITutor from './components/AITutor';
 import LabSimulation from './components/LabSimulation';
 import PracticeQuiz from './components/PracticeQuiz';
 import NetworkMapper from './components/NetworkMapper';
 import LabChallenges from './components/LabChallenges';
+import ReadinessTracker from './components/ReadinessTracker';
 import { 
   Network, 
   Terminal, 
@@ -37,8 +38,81 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'tutor' | 'lab' | 'quiz' | 'topology' | 'challenges'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'tutor' | 'lab' | 'quiz' | 'topology' | 'challenges' | 'readiness'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [selectedQuizDomain, setSelectedQuizDomain] = useState<string | null>(null);
+  
+  // Progress tracking state with persistence
+  const [readinessScore, setReadinessScore] = useState(() => {
+    const saved = localStorage.getItem('ccna-readiness-score');
+    return saved ? parseInt(saved) : 0;
+  });
+
+  const [exploredDomains, setExploredDomains] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('ccna-explored-domains');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const [quizzesTaken, setQuizzesTaken] = useState(() => {
+    const saved = localStorage.getItem('ccna-quizzes-taken');
+    return saved ? parseInt(saved) : 0;
+  });
+
+  const [challengesStarted, setChallengesStarted] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('ccna-challenges-started');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  // Persistence Effects
+  useEffect(() => {
+    localStorage.setItem('ccna-readiness-score', readinessScore.toString());
+  }, [readinessScore]);
+
+  useEffect(() => {
+    localStorage.setItem('ccna-explored-domains', JSON.stringify(Array.from(exploredDomains)));
+  }, [exploredDomains]);
+
+  useEffect(() => {
+    localStorage.setItem('ccna-quizzes-taken', quizzesTaken.toString());
+  }, [quizzesTaken]);
+
+  useEffect(() => {
+    localStorage.setItem('ccna-challenges-started', JSON.stringify(Array.from(challengesStarted)));
+  }, [challengesStarted]);
+
+  const readinessLabel = 
+    readinessScore < 30 ? 'Low' :
+    readinessScore < 70 ? 'Medium' : 'High';
+
+  const updateScore = (type: 'domain' | 'quiz' | 'challenge', id?: string) => {
+    if (type === 'domain' && id) {
+        setSelectedQuizDomain(id);
+        setActiveTab('quiz');
+    }
+
+    setReadinessScore(prev => {
+      let newScore = prev;
+      if (type === 'domain' && id && !exploredDomains.has(id)) {
+        setExploredDomains(prevSet => {
+          const next = new Set(prevSet);
+          next.add(id);
+          return next;
+        });
+        newScore += 5;
+      } else if (type === 'quiz') {
+        setQuizzesTaken(q => q + 1);
+        if (quizzesTaken < 10) newScore += 4; // Max 40% from quizzes
+      } else if (type === 'challenge' && id && !challengesStarted.has(id)) {
+        setChallengesStarted(prevSet => {
+          const next = new Set(prevSet);
+          next.add(id);
+          return next;
+        });
+        newScore += 10; // 10% per unique challenge
+      }
+      return Math.min(newScore, 100);
+    });
+  };
 
   const NavItem = ({ id, icon: Icon, label }: { id: any; icon: any; label: string }) => (
     <button
@@ -86,8 +160,11 @@ export default function App() {
           <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
           <NavItem id="topology" icon={MapIcon} label="Topology Builder" />
           <NavItem id="lab" icon={Terminal} label="Config Lab" />
-          <NavItem id="quiz" icon={Target} label="Practice Quiz" />
+          <button onClick={() => { setSelectedQuizDomain(null); setActiveTab('quiz'); }} className="w-full text-left">
+            <NavItem id="quiz" icon={Target} label="Practice Quiz" />
+          </button>
           <NavItem id="challenges" icon={Trophy} label="Lab Challenges" />
+          <NavItem id="readiness" icon={TrendingUp} label="Readiness" />
           <NavItem id="tutor" icon={MessageSquare} label="AI Mentor" />
         </div>
 
@@ -110,12 +187,15 @@ export default function App() {
             <p className="text-xs text-slate-500">Welcome back, Engineer. Ready to lab?</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-              <TrendingUp size={14} className="text-cisco-green" />
-              <span className="text-[10px] font-bold text-slate-600 uppercase">Preparation Score: 72%</span>
-            </div>
+            <button 
+              onClick={() => setActiveTab('readiness')}
+              className="hidden sm:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm hover:border-cisco-blue transition-colors group"
+            >
+              <TrendingUp size={14} className="text-cisco-green group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold text-slate-600 uppercase">Preparation Score: {readinessScore}%</span>
+            </button>
             <div className="w-8 h-8 bg-slate-200 rounded-full border border-white shadow-sm overflow-hidden">
-               <img src="https://picsum.photos/seed/it/100/100" alt="Profile" referrerPolicy="no-referrer" />
+               <img src="https://picsum.photos/seed/toasterbeef/100/100" alt="Profile" referrerPolicy="no-referrer" />
             </div>
           </div>
         </header>
@@ -136,11 +216,11 @@ export default function App() {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                       <BookOpen size={64} />
                     </div>
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Domains</p>
-                    <h3 className="text-3xl font-bold text-slate-900">06</h3>
+                     <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Domains</p>
+                    <h3 className="text-3xl font-bold text-slate-900">{exploredDomains.size.toString().padStart(2, '0')}</h3>
                     <div className="mt-4 flex gap-1">
-                      {[1,1,1,1,0,0].map((v, i) => (
-                        <div key={i} className={cn("h-1 w-full rounded-full", v ? "bg-cisco-blue" : "bg-slate-200")} />
+                      {CCNA_DOMAINS.map((domain, i) => (
+                        <div key={i} title={domain.title} className={cn("h-1 w-full rounded-full transition-colors", exploredDomains.has(domain.id) ? "bg-cisco-blue" : "bg-slate-200")} />
                       ))}
                     </div>
                   </div>
@@ -149,16 +229,19 @@ export default function App() {
                       <Terminal size={64} />
                     </div>
                     <p className="text-xs font-bold text-slate-400 uppercase mb-1">Labs Completed</p>
-                    <h3 className="text-3xl font-bold text-slate-900">12</h3>
-                    <p className="text-xs text-cisco-green mt-2 font-medium">↑ 3 this week</p>
+                    <h3 className="text-3xl font-bold text-slate-900">{challengesStarted.size.toString().padStart(2, '0')}</h3>
+                    <p className="text-xs text-cisco-green mt-2 font-medium">↑ {challengesStarted.size} total</p>
                   </div>
                   <div className="glass-card rounded-2xl p-6 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                       <Shield size={64} />
                     </div>
                     <p className="text-xs font-bold text-slate-400 uppercase mb-1">Exam Readiness</p>
-                    <h3 className="text-3xl font-bold text-slate-900">High</h3>
-                    <p className="text-xs text-slate-500 mt-2">Predicted score: 840/1000</p>
+                    <h3 className={cn(
+                      "text-3xl font-bold",
+                      readinessLabel === 'High' ? "text-cisco-green" : readinessLabel === 'Medium' ? "text-amber-500" : "text-red-500"
+                    )}>{readinessLabel}</h3>
+                    <p className="text-xs text-slate-500 mt-2">Predicted score: {Math.round(readinessScore * 8.4 + 160)}/1000</p>
                   </div>
                 </div>
 
@@ -172,6 +255,7 @@ export default function App() {
                     {CCNA_DOMAINS.map((domain) => (
                       <div 
                         key={domain.id}
+                        onClick={() => updateScore('domain', domain.id)}
                         className="glass-card rounded-2xl p-5 hover:border-cisco-blue/50 hover:shadow-xl hover:shadow-cisco-blue/5 transition-all group cursor-pointer"
                       >
                         <div className="flex items-start justify-between mb-4">
@@ -267,7 +351,7 @@ export default function App() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto"
               >
-                <PracticeQuiz />
+                <PracticeQuiz onComplete={() => updateScore('quiz')} initialDomainId={selectedQuizDomain} />
               </motion.div>
             )}
 
@@ -279,7 +363,19 @@ export default function App() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-6xl mx-auto"
               >
-                <LabChallenges />
+                <LabChallenges onChallengeStarted={(id) => updateScore('challenge', id)} />
+              </motion.div>
+            )}
+
+            {activeTab === 'readiness' && (
+              <motion.div
+                key="readiness"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-6xl mx-auto"
+              >
+                <ReadinessTracker score={readinessScore} onScoreChange={setReadinessScore} />
               </motion.div>
             )}
 

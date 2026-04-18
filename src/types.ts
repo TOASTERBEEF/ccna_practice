@@ -315,5 +315,75 @@ export const LAB_CHALLENGES: LabChallenge[] = [
       "Assign IP addresses to the interfaces: 192.168.1.1/24 and 10.0.0.1/24."
     ],
     tips: "Ensure all 'shutdown' interfaces are brought up with 'no shutdown'."
+  },
+  {
+    id: "challenge-4",
+    title: "EtherChannel (LACP)",
+    difficulty: "medium",
+    category: "cli",
+    description: "Bundle multiple physical links into a single logical link using LACP.",
+    tasks: [
+      "Select two interfaces on Switch 1.",
+      "Configure them as part of Channel-Group 1.",
+      "Set the mode to 'active' for LACP negotiation.",
+      "Verify the EtherChannel state with 'show etherchannel summary'."
+    ],
+    tips: "All ports in the bundle must have matching speeds, duplex, and VLAN settings."
+  },
+  {
+    id: "challenge-5",
+    title: "Port Security",
+    difficulty: "easy",
+    category: "cli",
+    description: "Secure switch access ports by limiting the number of allowed MAC addresses.",
+    tasks: [
+      "Select an access port (e.g., FastEthernet 0/1).",
+      "Enable port security with 'switchport port-security'.",
+      "Set the maximum number of MAC addresses to 1.",
+      "Configure the violation mode to 'shutdown' or 'restrict'."
+    ],
+    tips: "You may need to toggle the 'switchport mode access' command first."
+  },
+  {
+    id: "challenge-6",
+    title: "OSPFv2 Single-Area",
+    difficulty: "medium",
+    category: "cli",
+    description: "Configure dynamic routing using OSPF in a single area (Area 0).",
+    tasks: [
+      "Enable OSPF with 'router ospf 1'.",
+      "Assign a unique Router ID.",
+      "Advertise the local subnets using the 'network' command with wildcard masks.",
+      "Verify adjacency with 'show ip ospf neighbor'."
+    ],
+    tips: "The wildcard mask for a /24 network is 0.0.0.255."
+  },
+  {
+    id: "challenge-7",
+    title: "DHCP Server Config",
+    difficulty: "medium",
+    category: "cli",
+    description: "Configure a Cisco Router to act as a DHCP server for local clients.",
+    tasks: [
+      "Exclude addresses meant for static assignment (e.g., the default gateway).",
+      "Create a DHCP pool named 'LAN-POOL'.",
+      "Specify the network range and default router.",
+      "Configure a DNS server address (e.g., 8.8.8.8)."
+    ],
+    tips: "Use 'ip dhcp excluded-address' before defining the pool."
+  },
+  {
+    id: "challenge-8",
+    title: "Standard IPv4 ACLs",
+    difficulty: "hard",
+    category: "cli",
+    description: "Implement simple traffic filtering using numbered or named standard ACLs.",
+    tasks: [
+      "Create an ACL to 'permit' a specific host and 'deny' others.",
+      "Apply the ACL to the correct interface and direction (in/out).",
+      "Verify matches with 'show access-lists'.",
+      "Test connectivity to see if filtering occurs as expected."
+    ],
+    tips: "Standard ACLs should generally be placed as close to the destination as possible."
   }
 ];
