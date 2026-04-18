@@ -2,12 +2,15 @@
 
 Comprehensive Cisco Certified Network Associate (CCNA) exam preparation platform.
 
-## Features
+## Key Features
 
+- **Readiness Tracker**: A dynamic progression system that tracks your "Preparation Score" based on platform activity and manual calibration.
+- **Lab Challenges**: Hands-on missions inspired by Jeremy's IT Lab, covering EtherChannel, OSPF, Port Security, and more.
 - **AI Mentor**: Chat with an AI-powered CCNP instructor for clarifications on any CCNA topic.
 - **Topology Builder**: Design your network diagrams with a lightweight, Packet Tracer-like interactive canvas.
 - **IOS Config Lab**: Practice Cisco CLI commands in a simulated environment.
-- **Practice Quiz**: Test your knowledge with an expansive question bank, customizable by difficulty and length.
+- **Practice Quiz**: Test your knowledge with an expansive question bank, customizable by difficulty and domain focus.
+- **Persistence**: Your progress, scores, and explored domains are automatically saved to your browser's local storage.
 
 ## Technology Stack
 
